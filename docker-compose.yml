@@ -1,0 +1,189 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: webupload-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/webupload
+      - REDIS_URL=redis://redis:6379
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=minio
+      - S3_SECRET_KEY=minio123
+      - S3_BUCKET=webupload
+      - S3_REGION=us-east-1
+      - JWT_SECRET=development_jwt_secret_change_in_production
+      - REFRESH_TOKEN_SECRET=development_refresh_token_secret_change_in_production
+      - CLAMAV_HOST=clamav
+      - CLAMAV_PORT=3310
+      - CORS_ORIGIN=http://localhost:3000
+      - FILE_UPLOAD_MAX_SIZE=104857600
+      - RATE_LIMIT_WINDOW=60000
+      - RATE_LIMIT_MAX=100
+      - LOG_LEVEL=debug
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - clamav
+    restart: unless-stopped
+    networks:
+      - webupload-network
+
+  worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.worker
+    container_name: webupload-worker
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/webupload
+      - REDIS_URL=redis://redis:6379
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=minio
+      - S3_SECRET_KEY=minio123
+      - S3_BUCKET=webupload
+      - S3_REGION=us-east-1
+      - CLAMAV_HOST=clamav
+      - CLAMAV_PORT=3310
+      - LOG_LEVEL=debug
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - clamav
+    restart: unless-stopped
+    networks:
+      - webupload-network
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: webupload-web
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - webupload-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: webupload-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=webupload
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - webupload-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: webupload-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - webupload-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: webupload-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio123
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - webupload-network
+
+  createbuckets:
+    image: minio/mc
+    container_name: webupload-createbuckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc config host add myminio http://minio:9000 minio minio123;
+      /usr/bin/mc rm -r --force myminio/webupload;
+      /usr/bin/mc mb myminio/webupload;
+      /usr/bin/mc policy set download myminio/webupload;
+      exit 0;
+      "
+    networks:
+      - webupload-network
+
+  clamav:
+    image: clamav/clamav:latest
+    container_name: webupload-clamav
+    ports:
+      - "3310:3310"
+    volumes:
+      - clamav-data:/var/lib/clamav
+    environment:
+      - CLAMAV_NO_FRESHCLAMD=true
+    restart: unless-stopped
+    networks:
+      - webupload-network
+
+networks:
+  webupload-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+  clamav-data:
+    driver: local
