@@ -103,8 +103,10 @@ const setupRoutes = async () => {
     return { status: 'ok', message: 'WebUpload API is running' };
   });
 
-  // User registration
-  fastify.post('/auth/register', async (request, reply) => {
+  // API prefix routes with /api prefix
+  fastify.register((instance, opts, done) => {
+    // User registration
+    instance.post('/auth/register', async (request, reply) => {
     const { email, password, name } = request.body;
     
     if (!email || !password || !name) {
@@ -145,7 +147,7 @@ const setupRoutes = async () => {
   });
 
   // User login
-  fastify.post('/auth/login', async (request, reply) => {
+  instance.post('/auth/login', async (request, reply) => {
     const { email, password } = request.body;
     
     if (!email || !password) {
@@ -220,7 +222,7 @@ const setupRoutes = async () => {
   });
 
   // Get user profile
-  fastify.get('/auth/me', { preHandler: fastify.authenticate }, async (request) => {
+  instance.get('/auth/me', { preHandler: fastify.authenticate }, async (request) => {
     const user = users.get(request.user.email);
     
     if (!user) {
@@ -240,7 +242,7 @@ const setupRoutes = async () => {
   });
 
   // Get files
-  fastify.get('/files', { preHandler: fastify.authenticate }, async (request) => {
+  instance.get('/files', { preHandler: fastify.authenticate }, async (request) => {
     const { status, page = 1, pageSize = 20 } = request.query;
     
     let filteredFiles = [...files.values()];
@@ -273,6 +275,10 @@ const setupRoutes = async () => {
       }
     };
   });
+    
+    // Signal that we're done setting up the instance
+    done();
+  }, { prefix: '/api' });
 };
 
 // Start server
