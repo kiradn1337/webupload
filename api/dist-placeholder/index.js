@@ -365,11 +365,8 @@ const start = async () => {
     // Set up routes
     await setupRoutes();
     
-    // Log all registered routes for debugging
-    console.log('Registered routes:');
-    fastify.routes.forEach(route => {
-      console.log(`${route.method} ${route.url}`);
-    });
+    // Log that routes are set up
+    console.log('Routes have been set up');
     
     // Start server
     await fastify.listen({ port: process.env.PORT || 8000, host: '0.0.0.0' });
