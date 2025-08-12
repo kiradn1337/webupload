@@ -1,0 +1,113 @@
+services:
+  # API Service
+  - type: web
+    name: webupload-api
+    env: node
+    region: oregon # Ganti dengan region yang diinginkan
+    rootDir: api
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: webupload-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: webupload-redis
+          type: redis
+          property: connectionString
+      - key: S3_BUCKET
+        value: webupload-prod
+      - key: S3_REGION
+        value: us-east-1 # Sesuaikan dengan region S3 Anda
+      - key: CORS_ORIGIN
+        value: https://webupload-web.onrender.com
+      - key: FILE_UPLOAD_MAX_SIZE
+        value: 104857600
+      - key: RATE_LIMIT_WINDOW
+        value: 60000
+      - key: RATE_LIMIT_MAX
+        value: 100
+      - key: LOG_LEVEL
+        value: info
+      # Secret environment variables perlu ditambahkan melalui Render dashboard:
+      # - JWT_SECRET
+      # - REFRESH_TOKEN_SECRET
+      # - S3_ENDPOINT
+      # - S3_ACCESS_KEY
+      # - S3_SECRET_KEY
+      # - CLAMAV_HOST (jika menggunakan external service)
+      # - CLAMAV_PORT (jika menggunakan external service)
+
+  # Worker Service
+  - type: worker
+    name: webupload-worker
+    env: node
+    region: oregon # Pastikan sama dengan API
+    rootDir: api
+    buildCommand: npm install && npm run build
+    startCommand: npm run worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: webupload-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: webupload-redis
+          type: redis
+          property: connectionString
+      - key: S3_BUCKET
+        value: webupload-prod
+      - key: S3_REGION
+        value: us-east-1
+      # Secret environment variables perlu ditambahkan melalui Render dashboard:
+      # - S3_ENDPOINT
+      # - S3_ACCESS_KEY
+      # - S3_SECRET_KEY
+      # - CLAMAV_HOST
+      # - CLAMAV_PORT
+      
+  # Frontend Web Service
+  - type: web
+    name: webupload-web
+    env: node
+    region: oregon # Pastikan sama dengan API
+    rootDir: web
+    buildCommand: npm install && npm run build
+    startCommand: npm run start # Jika menggunakan server-side rendering, atau ganti dengan "npm run serve" jika static site
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: https://webupload-api.onrender.com
+
+databases:
+  - name: webupload-db
+    region: oregon # Pastikan sama dengan services lain
+    plan: standard # Atau sesuaikan dengan kebutuhan
+    databaseName: webupload
+    user: webupload
+
+redis:
+  - name: webupload-redis
+    region: oregon # Pastikan sama dengan services lain
+    plan: standard # Atau sesuaikan dengan kebutuhan
+    ipAllowList: # Mengizinkan akses hanya dari layanan Render
+      - source: 0.0.0.0/0
+        description: everywhere
+
+# Catatan penting:
+# 1. Untuk variabel rahasia seperti JWT_SECRET, tambahkan melalui dashboard Render
+# 2. Sesuaikan region dengan kebutuhan (misal: oregon, frankfurt, singapore)
+# 3. Sesuaikan plan dengan kebutuhan (free, starter, standard, dll)
+# 4. Untuk S3, atur endpoint dan kredensial sesuai penyedia S3 Anda
+# 5. Untuk ClamAV, Anda perlu layanan eksternal di production
