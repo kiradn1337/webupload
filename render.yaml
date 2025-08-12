@@ -8,7 +8,7 @@ services:
     region: singapore
     plan: free
     rootDir: api
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm install --save-dev @types/node @types/pg @types/mime-types && npm run build
     startCommand: npm start
     healthCheckPath: /healthz
     envVars:
@@ -55,7 +55,7 @@ services:
     region: singapore
     plan: free
     rootDir: api
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm install --save-dev @types/node @types/pg @types/mime-types && npm run build
     startCommand: npm run worker
     envVars:
       - key: NODE_ENV
