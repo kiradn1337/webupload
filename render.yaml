@@ -8,8 +8,8 @@ services:
     region: singapore
     plan: free
     rootDir: api
-    buildCommand: npm install --include=dev && npm install --save-dev @types/node @types/pg @types/mime-types && npm run build
-    startCommand: npm start
+    buildCommand: npm install fastify && mkdir -p dist && cp dist-placeholder/index.js dist/
+    startCommand: node dist/index.js
     healthCheckPath: /healthz
     envVars:
       - key: NODE_ENV
@@ -55,8 +55,8 @@ services:
     region: singapore
     plan: free
     rootDir: api
-    buildCommand: npm install --include=dev && npm install --save-dev @types/node @types/pg @types/mime-types && npm run build
-    startCommand: npm run worker
+    buildCommand: npm install && mkdir -p dist && cp dist-placeholder/worker.js dist/
+    startCommand: node dist/worker.js
     envVars:
       - key: NODE_ENV
         value: production
