@@ -2,6 +2,8 @@
 
 This guide provides step-by-step instructions for deploying the SecureFileUpload application on Render.com.
 
+> **Tip**: The fastest way to deploy is using the included `render.yaml` Blueprint file, which automates the setup of all services at once.
+
 ## Prerequisites
 
 1. A Render.com account
@@ -22,7 +24,12 @@ git commit -m "Initial commit"
 
 # Create a repository on GitHub and push to it
 git remote add origin https://github.com/yourusername/webupload.git
-git push -u origin main
+
+# Check which branch you're on (usually master or main)
+git branch
+
+# Push to the appropriate branch (replace 'master' with your branch name if different)
+git push -u origin master
 ```
 
 ## Step 2: Create a PostgreSQL Database on Render
@@ -49,7 +56,25 @@ git push -u origin main
 4. Click "Create Redis"
 5. Make note of the connection details provided
 
-## Step 4: Set Up the Backend API Service
+## Step 4: Deploy with Render Blueprint (Recommended)
+
+The easiest way to deploy the entire stack is using the Render Blueprint system:
+
+1. Make sure you have the `render.yaml` file in your repository root
+2. Log in to your Render.com dashboard
+3. Click "New" and select "Blueprint"
+4. Connect to your GitHub repository
+5. Render will automatically detect the `render.yaml` file and configure all services
+6. Add the necessary secret environment variables:
+   - `JWT_SECRET`: Generate a secure random string
+   - `REFRESH_TOKEN_SECRET`: Generate another secure random string
+   - `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`: Configure for your production S3 service
+   - `CLAMAV_HOST`, `CLAMAV_PORT`: If using an external ClamAV service
+7. Click "Apply" to create and deploy all services at once
+
+## Alternative Step 4: Set Up the Backend API Service Manually
+
+If you prefer to set up services individually:
 
 1. Navigate to "Web Services" in the Render.com side menu
 2. Click "New Web Service"
@@ -60,8 +85,8 @@ git push -u origin main
    - Branch: main
    - Root Directory: api
    - Runtime: Node
-   - Build Command: `cd ../api && npm install && npm run build`
-   - Start Command: `cd ../api && npm start`
+   - Build Command: `npm install && npm run build`
+   - Start Command: `npm start`
    - Plan: Choose based on your requirements (at least Standard)
 5. Add Environment Variables (from your .env file):
    - Copy all backend-related environment variables from your .env file
@@ -73,7 +98,9 @@ git push -u origin main
      - `CORS_ORIGIN`: Set to your frontend URL
 6. Click "Create Web Service"
 
-## Step 5: Set Up the Frontend Web Service
+## Alternative Step 5: Set Up the Frontend Web Service Manually
+
+If you're setting up services individually rather than using the Blueprint:
 
 1. Navigate back to "Web Services" in the Render.com side menu
 2. Click "New Web Service"
@@ -84,15 +111,34 @@ git push -u origin main
    - Branch: main
    - Root Directory: web
    - Runtime: Node
-   - Build Command: `cd ../web && npm install && npm run build`
-   - Start Command: `cd ../web && npm start`
+   - Build Command: `npm install && npm run build`
+   - Start Command: `npm start`
    - Plan: Choose based on your requirements
 5. Add Environment Variables:
    - `VITE_API_URL`: Set to your backend API URL (e.g., https://webupload-api.onrender.com)
    - Add any other frontend-specific environment variables
 6. Click "Create Web Service"
 
-## Step 6: Set Up External Services
+## Alternative Step 6: Set Up Worker Service Manually
+
+If you're setting up services individually:
+
+1. Navigate to "Background Workers" in the Render.com side menu
+2. Click "New Background Worker"
+3. Connect to your GitHub repository
+4. Configure the worker:
+   - Name: webupload-worker
+   - Region: Same as your API
+   - Branch: main
+   - Root Directory: api
+   - Runtime: Node
+   - Build Command: `npm install && npm run build`
+   - Start Command: `npm run worker`
+   - Plan: Choose based on your requirements
+5. Add the same environment variables as the API service
+6. Click "Create Background Worker"
+
+## Step 7: Set Up External Services
 
 ### ClamAV Setup
 
@@ -112,7 +158,7 @@ If not using Render Disks, set up an S3-compatible storage service:
 
 Update the S3 environment variables in your API service to point to your production storage.
 
-## Step 7: Final Configuration
+## Step 8: Final Configuration
 
 1. Set up custom domains for your services (optional)
 2. Configure SSL certificates (Render.com handles this automatically for *.onrender.com domains)
