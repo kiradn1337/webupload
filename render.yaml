@@ -87,7 +87,7 @@ services:
     region: singapore
     plan: free
     rootDir: web
-    buildCommand: npm install && npm run build && npm install -g serve
+    buildCommand: npm install && npm install --save-dev @types/react-dom && npm run build && npm install -g serve
     startCommand: serve -s dist -l $PORT
     envVars:
       - key: NODE_ENV

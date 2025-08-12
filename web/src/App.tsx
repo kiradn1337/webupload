@@ -8,11 +8,12 @@ import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
 import FilesPage from './pages/FilesPage';
 import FileDetailsPage from './pages/FileDetailsPage';
-import SharedFilePage from './pages/SharedFilePage';
-import AdminFilesPage from './pages/AdminFilesPage';
-import AdminUsersPage from './pages/AdminUsersPage';
-import AdminAuditLogsPage from './pages/AdminAuditLogsPage';
-import NotFoundPage from './pages/NotFoundPage';
+// These pages don't exist yet - they'll be implemented in future versions
+// import SharedFilePage from './pages/SharedFilePage';
+// import AdminFilesPage from './pages/AdminFilesPage';
+// import AdminUsersPage from './pages/AdminUsersPage';
+// import AdminAuditLogsPage from './pages/AdminAuditLogsPage';
+// import NotFoundPage from './pages/NotFoundPage';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ element: React.ReactElement; requireAdmin?: boolean }> = ({
@@ -49,8 +50,7 @@ function App() {
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/s/:token" element={<SharedFilePage />} />
-
+      
       {/* Protected routes */}
       <Route path="/" element={<ProtectedRoute element={<Layout />} />}>
         <Route index element={<HomePage />} />
@@ -58,14 +58,14 @@ function App() {
         <Route path="files" element={<FilesPage />} />
         <Route path="files/:id" element={<FileDetailsPage />} />
         
-        {/* Admin routes */}
-        <Route path="admin/files" element={<ProtectedRoute element={<AdminFilesPage />} requireAdmin />} />
-        <Route path="admin/users" element={<ProtectedRoute element={<AdminUsersPage />} requireAdmin />} />
-        <Route path="admin/audit-logs" element={<ProtectedRoute element={<AdminAuditLogsPage />} requireAdmin />} />
+        {/* Admin routes - to be implemented in future versions */}
+        {/* <Route path="admin/files" element={<ProtectedRoute element={<AdminFilesPage />} requireAdmin />} /> */}
+        {/* <Route path="admin/users" element={<ProtectedRoute element={<AdminUsersPage />} requireAdmin />} /> */}
+        {/* <Route path="admin/audit-logs" element={<ProtectedRoute element={<AdminAuditLogsPage />} requireAdmin />} /> */}
       </Route>
 
-      {/* Not found */}
-      <Route path="*" element={<NotFoundPage />} />
+      {/* Not found - redirect to home page for now */}
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
