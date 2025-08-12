@@ -3,8 +3,8 @@ services:
   - type: web
     name: webupload-api
     env: node
-    region: oregon # Ganti dengan region yang diinginkan
-    rootDir: api
+    region: oregon
+    plan: starter
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /healthz
@@ -49,8 +49,8 @@ services:
   - type: worker
     name: webupload-worker
     env: node
-    region: oregon # Pastikan sama dengan API
-    rootDir: api
+    region: oregon
+    plan: starter
     buildCommand: npm install && npm run build
     startCommand: npm run worker
     envVars:
@@ -80,10 +80,10 @@ services:
   - type: web
     name: webupload-web
     env: node
-    region: oregon # Pastikan sama dengan API
-    rootDir: web
+    region: oregon
+    plan: starter
     buildCommand: npm install && npm run build
-    startCommand: npm run start # Jika menggunakan server-side rendering, atau ganti dengan "npm run serve" jika static site
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -92,16 +92,16 @@ services:
 
 databases:
   - name: webupload-db
-    region: oregon # Pastikan sama dengan services lain
-    plan: standard # Atau sesuaikan dengan kebutuhan
+    region: oregon
+    plan: starter
     databaseName: webupload
     user: webupload
 
 redis:
   - name: webupload-redis
-    region: oregon # Pastikan sama dengan services lain
-    plan: standard # Atau sesuaikan dengan kebutuhan
-    ipAllowList: # Mengizinkan akses hanya dari layanan Render
+    region: oregon
+    plan: starter
+    ipAllowList:
       - source: 0.0.0.0/0
         description: everywhere
 
