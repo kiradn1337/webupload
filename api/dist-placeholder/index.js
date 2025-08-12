@@ -103,6 +103,81 @@ const setupRoutes = async () => {
     return { status: 'ok', message: 'WebUpload API is running' };
   });
 
+  // Direct auth endpoints (for backward compatibility)
+  fastify.post('/auth/login', async (request, reply) => {
+    const { email, password } = request.body;
+    
+    if (!email || !password) {
+      reply.status(400).send({ 
+        success: false, 
+        error: 'Email and password are required' 
+      });
+      return;
+    }
+    
+    const user = users.get(email);
+    
+    if (!user) {
+      reply.status(401).send({ 
+        success: false, 
+        error: 'Invalid credentials' 
+      });
+      return;
+    }
+    
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    
+    if (!passwordMatches) {
+      reply.status(401).send({ 
+        success: false, 
+        error: 'Invalid credentials' 
+      });
+      return;
+    }
+    
+    // Generate JWT token
+    const tokenPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    };
+    
+    const accessToken = jwt.sign(
+      tokenPayload,
+      process.env.JWT_SECRET || 'jwt-secret-placeholder',
+      { expiresIn: '1h' }
+    );
+    
+    // Set refresh token as cookie
+    const refreshToken = jwt.sign(
+      tokenPayload,
+      process.env.REFRESH_TOKEN_SECRET || 'refresh-token-secret-placeholder',
+      { expiresIn: '7d' }
+    );
+    
+    reply.setCookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none'
+    });
+    
+    return { 
+      success: true, 
+      message: 'Login successful',
+      data: {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      }
+    };
+  });
+
   // API prefix routes with /api prefix
   fastify.register((instance, opts, done) => {
     // User registration
@@ -289,6 +364,12 @@ const start = async () => {
     
     // Set up routes
     await setupRoutes();
+    
+    // Log all registered routes for debugging
+    console.log('Registered routes:');
+    fastify.routes.forEach(route => {
+      console.log(`${route.method} ${route.url}`);
+    });
     
     // Start server
     await fastify.listen({ port: process.env.PORT || 8000, host: '0.0.0.0' });
