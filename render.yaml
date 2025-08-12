@@ -3,8 +3,8 @@ services:
   - type: web
     name: webupload-api
     env: node
-    region: oregon
-    plan: starter
+    region: singapore
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /healthz
@@ -49,8 +49,8 @@ services:
   - type: worker
     name: webupload-worker
     env: node
-    region: oregon
-    plan: starter
+    region: singapore
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm run worker
     envVars:
@@ -80,8 +80,8 @@ services:
   - type: web
     name: webupload-web
     env: node
-    region: oregon
-    plan: starter
+    region: singapore
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
@@ -92,22 +92,22 @@ services:
 
 databases:
   - name: webupload-db
-    region: oregon
-    plan: starter
+    region: singapore
+    plan: free
     databaseName: webupload
     user: webupload
 
 redis:
   - name: webupload-redis
-    region: oregon
-    plan: starter
+    region: singapore
+    plan: free
     ipAllowList:
       - source: 0.0.0.0/0
         description: everywhere
 
 # Catatan penting:
 # 1. Untuk variabel rahasia seperti JWT_SECRET, tambahkan melalui dashboard Render
-# 2. Sesuaikan region dengan kebutuhan (misal: oregon, frankfurt, singapore)
-# 3. Sesuaikan plan dengan kebutuhan (free, starter, standard, dll)
+# 2. Sesuaikan region dengan kebutuhan (misal: singapore, frankfurt, singapore)
+# 3. Sesuaikan plan dengan kebutuhan (free, free, standard, dll)
 # 4. Untuk S3, atur endpoint dan kredensial sesuai penyedia S3 Anda
 # 5. Untuk ClamAV, Anda perlu layanan eksternal di production
