@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://render.com/schema.json
+
 services:
   # API Service
   - type: web
@@ -90,6 +92,15 @@ services:
       - key: VITE_API_URL
         value: https://webupload-api.onrender.com
 
+  # Redis Service
+  - type: redis
+    name: webupload-redis
+    region: singapore
+    plan: free
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+
 databases:
   - name: webupload-db
     region: singapore
@@ -97,17 +108,11 @@ databases:
     databaseName: webupload
     user: webupload
 
-redis:
-  - name: webupload-redis
-    region: singapore
-    plan: free
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: everywhere
-
-# Catatan penting:
-# 1. Untuk variabel rahasia seperti JWT_SECRET, tambahkan melalui dashboard Render
-# 2. Sesuaikan region dengan kebutuhan (misal: singapore, frankfurt, singapore)
-# 3. Sesuaikan plan dengan kebutuhan (free, free, standard, dll)
-# 4. Untuk S3, atur endpoint dan kredensial sesuai penyedia S3 Anda
-# 5. Untuk ClamAV, Anda perlu layanan eksternal di production
+# Note: Secret environment variables must be added via the Render dashboard:
+# - JWT_SECRET
+# - REFRESH_TOKEN_SECRET
+# - S3_ENDPOINT
+# - S3_ACCESS_KEY
+# - S3_SECRET_KEY
+# - CLAMAV_HOST (if using external service)
+# - CLAMAV_PORT (if using external service)
